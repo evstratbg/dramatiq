@@ -58,6 +58,7 @@ def generate_unique_id() -> str:
 class Message(namedtuple("Message", (
         "queue_name", "actor_name", "args", "kwargs",
         "options", "message_id", "message_timestamp",
+        "dead_message_ttl"
 ))):
     """Encapsulates metadata about messages being sent to individual actors.
 
