@@ -171,16 +171,17 @@ class Broker:
           actor(Actor): The actor being declared.
         """
         self.emit_before("declare_actor", actor)
-        self.declare_queue(actor.queue_name)
+        self.declare_queue(actor.queue_name, actor.dead_message_ttl)
         self.actors[actor.actor_name] = actor
         self.emit_after("declare_actor", actor)
 
-    def declare_queue(self, queue_name):  # pragma: no cover
+    def declare_queue(self, queue_name, dead_message_ttl):  # pragma: no cover
         """Declare a queue on this broker.  This method must be
         idempotent.
 
         Parameters:
           queue_name(str): The name of the queue being declared.
+          dead_message_ttl(int): The amount of time (in ms) that dead-lettered messages are kept.
         """
         raise NotImplementedError
 

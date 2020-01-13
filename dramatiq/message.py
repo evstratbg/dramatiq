@@ -70,13 +70,15 @@ class Message(namedtuple("Message", (
       message_id(str): A globally-unique id assigned to the actor.
       message_timestamp(int): The UNIX timestamp in milliseconds
         representing when the message was first enqueued.
+      dead_message_ttl(int): The amount of time (in ms) that dead-lettered messages are kept.
     """
 
-    def __new__(cls, *, queue_name, actor_name, args, kwargs, options, message_id=None, message_timestamp=None):
+    def __new__(cls, *, queue_name, actor_name, args, kwargs, options, message_id=None, message_timestamp=None, dead_message_ttl=None):
         return super().__new__(
             cls, queue_name, actor_name, tuple(args), kwargs, options,
             message_id=message_id or generate_unique_id(),
             message_timestamp=message_timestamp or int(time.time() * 1000),
+            dead_message_ttl=dead_message_ttl
         )
 
     def __or__(self, other) -> pipeline:

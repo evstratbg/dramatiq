@@ -37,16 +37,18 @@ class Actor:
       actor_name(str): The actor's name.
       queue_name(str): The actor's queue.
       priority(int): The actor's priority.
+      dead_message_ttl(int): The amount of time (in ms) that dead-lettered messages are kept.
       options(dict): Arbitrary options that are passed to the broker
         and middleware.
     """
 
-    def __init__(self, fn, *, broker, actor_name, queue_name, priority, options):
+    def __init__(self, fn, *, broker, actor_name, queue_name, priority, dead_message_ttl, options):
         self.logger = get_logger(fn.__module__, actor_name)
         self.fn = fn
         self.broker = broker
         self.actor_name = actor_name
         self.queue_name = queue_name
+        self.dead_message_ttl = dead_message_ttl
         self.priority = priority
         self.options = options
         self.broker.declare_actor(self)
@@ -94,6 +96,7 @@ class Actor:
         return Message(
             queue_name=self.queue_name,
             actor_name=self.actor_name,
+            dead_message_ttl=self.dead_message_ttl,
             args=args or (), kwargs=kwargs or {},
             options=options,
         )

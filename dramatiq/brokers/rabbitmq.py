@@ -189,18 +189,21 @@ class RabbitmqBroker(Broker):
         """
         return _RabbitmqConsumer(self.parameters, queue_name, prefetch, timeout)
 
-    def declare_queue(self, queue_name):
+    def declare_queue(self, queue_name, dead_message_ttl=None):
         """Declare a queue.  Has no effect if a queue with the given
         name already exists.
 
         Parameters:
           queue_name(str): The name of the new queue.
+          dead_message_ttl(int): The amount of time (in ms) that dead-lettered messages are kept.
 
         Raises:
           ConnectionClosed: If the underlying channel or connection
             has been closed.
         """
         attempts = 1
+        if dead_message_ttl is None:
+            dead_message_ttl = DEAD_MESSAGE_TTL
         while True:
             try:
                 if queue_name not in self.queues:
@@ -214,7 +217,7 @@ class RabbitmqBroker(Broker):
                     self.delay_queues.add(delayed_name)
                     self.emit_after("declare_delay_queue", delayed_name)
 
-                    self._declare_xq_queue(queue_name)
+                    self._declare_xq_queue(queue_name, dead_message_ttl)
                 break
             except (pika.exceptions.AMQPConnectionError,
                     pika.exceptions.AMQPChannelError) as e:  # pragma: no cover
@@ -250,11 +253,11 @@ class RabbitmqBroker(Broker):
         arguments = self._build_queue_arguments(queue_name)
         return self.channel.queue_declare(queue=dq_name(queue_name), durable=True, arguments=arguments)
 
-    def _declare_xq_queue(self, queue_name):
+    def _declare_xq_queue(self, queue_name, dead_message_ttl):
         return self.channel.queue_declare(queue=xq_name(queue_name), durable=True, arguments={
             # This HAS to be a static value since messages are expired
             # in order inside of RabbitMQ (head-first).
-            "x-message-ttl": DEAD_MESSAGE_TTL,
+            "x-message-ttl": dead_message_ttl,
         })
 
     def enqueue(self, message, *, delay=None):
@@ -324,7 +327,7 @@ class RabbitmqBroker(Broker):
         """
         return self.queues.copy()
 
-    def get_queue_message_counts(self, queue_name):
+    def get_queue_message_counts(self, queue_name, dead_message_ttl):
         """Get the number of messages in a queue.  This method is only
         meant to be used in unit and integration tests.
 
@@ -337,7 +340,7 @@ class RabbitmqBroker(Broker):
         """
         queue_response = self._declare_queue(queue_name)
         dq_queue_response = self._declare_dq_queue(queue_name)
-        xq_queue_response = self._declare_xq_queue(queue_name)
+        xq_queue_response = self._declare_xq_queue(queue_name, dead_message_ttl)
         return (
             queue_response.method.message_count,
             dq_queue_response.method.message_count,
