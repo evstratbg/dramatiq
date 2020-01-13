@@ -157,7 +157,7 @@ class Actor:
         return "Actor(%(actor_name)s)" % vars(self)
 
 
-def actor(fn=None, *, actor_class=Actor, actor_name=None, queue_name="default", priority=0, broker=None, **options):
+def actor(fn=None, *, actor_class=Actor, actor_name=None, queue_name="default", priority=0, broker=None, dead_message_ttl=None, **options):
     """Declare an actor.
 
     Examples:
@@ -194,6 +194,7 @@ def actor(fn=None, *, actor_class=Actor, actor_name=None, queue_name="default", 
         priority than the other then it will be processed first.
         Lower numbers represent higher priorities.
       broker(Broker): The broker to use with this actor.
+      dead_message_ttl(int): The amount of time (in ms) that dead-lettered messages are kept.
       **options(dict): Arbitrary options that vary with the set of
         middleware that you use.  See ``get_broker().actor_options``.
 
@@ -221,6 +222,7 @@ def actor(fn=None, *, actor_class=Actor, actor_name=None, queue_name="default", 
         return actor_class(
             fn, actor_name=actor_name, queue_name=queue_name,
             priority=priority, broker=broker, options=options,
+            dead_message_ttl=dead_message_ttl
         )
 
     if fn is None:
