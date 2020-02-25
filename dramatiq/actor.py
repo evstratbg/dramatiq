@@ -129,6 +129,9 @@ class Actor:
         message = self.message_with_options(args=args, kwargs=kwargs, **options)
         return self.broker.enqueue(message, delay=delay)
 
+    def retry(self, *, args=None, kwargs=None, delay=None, **options):
+        self.send_with_options(args=args, kwargs=kwargs, delay=delay, **options)
+
     def __call__(self, *args, **kwargs):
         """Synchronously call this actor.
 
